@@ -43,6 +43,8 @@ class ResponsesMockServer(BaseTestServer):
     Response = web.Response
     RawResponse = RawResponse
 
+    passthrough_headers = ("content-type",)
+
     def __init__(self, *, scheme=sentinel, host="127.0.0.1", **kwargs):
         self._responses = []
         self._host_patterns = set()
@@ -121,7 +123,7 @@ class ResponsesMockServer(BaseTestServer):
 
             async with ClientSession(connector=connector) as session:
                 async with getattr(session, request.method.lower())(original_request.url, headers=headers, data=(await request.read())) as r:
-                    headers = {k: v for k, v in r.headers.items() if k.lower() == "content-type"}
+                    headers = {k: v for k, v in r.headers.items() if k.lower() in self.passthrough_headers}
                     text = await r.text()
                     response = self.Response(text=text, status=r.status, headers=headers)
                     return response

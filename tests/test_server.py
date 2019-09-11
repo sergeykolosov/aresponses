@@ -186,3 +186,16 @@ async def test_passthrough(aresponses):
         async with session.get(url) as response:
             text = await response.text()
     assert text == "200 OK"
+
+
+@pytest.mark.asyncio
+async def test_passthrough_headers(aresponses):
+    aresponses.passthrough_headers = ("content-type", "set-cookie")
+    aresponses.add("httpstat.us", "/200", "get", aresponses.passthrough)
+
+    url = "https://httpstat.us/200"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            text = await response.text()
+    assert text == "200 OK"
+    assert "set-cookie" in response.headers
